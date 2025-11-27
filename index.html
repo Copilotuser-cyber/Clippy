@@ -1092,7 +1092,7 @@ async function generateAIResponse(userMessage) {
             {
                 method: 'POST',
                 headers: {
-                    'Authorization': 'Bearer not now',
+                    'Authorization': 'Bearer ${HF_TOKEN}',
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
