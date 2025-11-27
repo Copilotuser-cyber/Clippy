@@ -1,4 +1,4 @@
-"name": "ai-nexus-backend",
+{"name": "ai-nexus-backend",
   "version": "1.0.0",
   "description": "Backend proxy for AI Nexus chat",
   "main": "server.js",
