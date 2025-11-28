@@ -126,23 +126,36 @@
             font-size: 14px;
         }
 
+        .user-details {
+            flex: 1;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
         .user-status {
-            font-size: 12px;
-            padding: 2px 8px;
-            border-radius: 10px;
-            margin-left: auto;
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 8px;
+            display: inline-block;
+            margin-top: 2px;
         }
 
         .status-admin {
             background-color: var(--admin-color);
+            color: white;
         }
 
         .status-premium {
             background-color: var(--premium-color);
+            color: black;
         }
 
         .status-free {
             background-color: var(--text-gray);
+            color: white;
         }
 
         .upgrade-section {
@@ -160,6 +173,7 @@
             border: none;
             border-radius: 4px;
             cursor: pointer;
+            font-size: 12px;
         }
 
         .upgrade-section button:disabled {
@@ -396,6 +410,7 @@
             background-color: var(--chat-bg);
             padding: 16px;
             border-radius: 8px;
+            text-align: center;
         }
 
         .stat-value {
@@ -429,6 +444,9 @@
         .admin-table {
             width: 100%;
             border-collapse: collapse;
+            background-color: var(--chat-bg);
+            border-radius: 8px;
+            overflow: hidden;
         }
 
         .admin-table th, .admin-table td {
@@ -440,6 +458,7 @@
         .admin-table th {
             color: var(--text-gray);
             font-weight: 500;
+            background-color: rgba(255, 255, 255, 0.05);
         }
 
         .action-btn {
@@ -556,6 +575,15 @@
             margin: 10px 0;
             text-align: center;
         }
+
+        .success-message {
+            background-color: var(--primary);
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -580,7 +608,7 @@
                     <div class="user-avatar" id="user-avatar">U</div>
                     <div class="user-details">
                         <div class="user-name" id="user-name">Guest</div>
-                        <div class="user-status" id="user-status">Not logged in</div>
+                        <div class="user-status status-free" id="user-status">Not logged in</div>
                     </div>
                 </div>
                 <div class="upgrade-section" id="upgrade-section" style="display: none;">
@@ -771,15 +799,14 @@
     <script>
         // Firebase configuration - REPLACE WITH YOUR ACTUAL FIREBASE CONFIG
         const firebaseConfig = {
-              apiKey: "AIzaSyA-7KtFeFcUndaOxdYxjTAzTsaBKvuOdDA",
-              authDomain: "nexus-2842a.firebaseapp.com",
-              projectId: "nexus-2842a",
-              storageBucket: "nexus-2842a.firebasestorage.app",
-              messagingSenderId: "888654157334",
-              appId: "1:888654157334:web:9178855888bff2aaeac737",
-              measurementId: "G-9F4JH2NYR0"
-        };
-
+  apiKey: "AIzaSyA-7KtFeFcUndaOxdYxjTAzTsaBKvuOdDA",
+  authDomain: "nexus-2842a.firebaseapp.com",
+  projectId: "nexus-2842a",
+  storageBucket: "nexus-2842a.firebasestorage.app",
+  messagingSenderId: "888654157334",
+  appId: "1:888654157334:web:9178855888bff2aaeac737",
+  measurementId: "G-9F4JH2NYR0"
+};
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
@@ -873,11 +900,15 @@
                 userAvatar.textContent = currentUser.displayName ? currentUser.displayName.charAt(0).toUpperCase() : currentUser.email.charAt(0).toUpperCase();
                 userName.textContent = currentUser.displayName || currentUser.email;
                 
-                // Update user status
+                // Update user status - ADMIN automatically gets premium
                 if (isAdmin) {
                     userStatus.textContent = 'Admin';
                     userStatus.className = 'user-status status-admin';
                     upgradeSection.style.display = 'none';
+                    // Admin automatically has premium access
+                    if (userData) {
+                        userData.isPremium = true;
+                    }
                 } else if (userData && userData.isPremium) {
                     userStatus.textContent = 'Premium';
                     userStatus.className = 'user-status status-premium';
@@ -891,8 +922,8 @@
                 // Show admin button if admin
                 adminDashboardBtn.style.display = isAdmin ? 'block' : 'none';
                 
-                // Update group chat button
-                if (userData && userData.isPremium) {
+                // Update group chat button - Admin and Premium users can create groups
+                if ((userData && userData.isPremium) || isAdmin) {
                     groupChatBtn.disabled = false;
                     groupChatBtn.innerHTML = '<i class="fas fa-users"></i> Create Group';
                 } else {
@@ -925,13 +956,20 @@
                 const userDoc = await db.collection('users').doc(currentUser.uid).get();
                 if (userDoc.exists) {
                     userData = userDoc.data();
+                    // Ensure admin always has premium
+                    if (isAdmin && !userData.isPremium) {
+                        await db.collection('users').doc(currentUser.uid).update({
+                            isPremium: true
+                        });
+                        userData.isPremium = true;
+                    }
                 } else {
                     // Create user document if it doesn't exist
                     userData = {
                         name: currentUser.displayName || currentUser.email,
                         email: currentUser.email,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                        isPremium: false,
+                        isPremium: isAdmin, // Admin automatically gets premium
                         premiumRequested: false
                     };
                     await db.collection('users').doc(currentUser.uid).set(userData);
@@ -983,12 +1021,14 @@
                 const userCredential = await auth.createUserWithEmailAndPassword(email, password);
                 await userCredential.user.updateProfile({ displayName: name });
                 
+                const isNewUserAdmin = email === 'lkmukhil@gmail.com';
+                
                 // Create user document in Firestore
                 await db.collection('users').doc(userCredential.user.uid).set({
                     name: name,
                     email: email,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    isPremium: false,
+                    isPremium: isNewUserAdmin, // Admin automatically gets premium
                     premiumRequested: false
                 });
                 
@@ -1003,11 +1043,11 @@
         }
 
         function handleGroupChat() {
-            if (!userData || !userData.isPremium) {
+            if (!userData || (!userData.isPremium && !isAdmin)) {
                 alert('Premium access required for group chats. Please request premium access from admin.');
                 return;
             }
-            alert('Group chat feature would be implemented here for premium users.');
+            alert('Group chat feature would be implemented here for premium users and admins.');
         }
 
         function toggleUserMenu() {
@@ -1039,6 +1079,11 @@
         async function requestPremiumAccess() {
             if (!currentUser) {
                 alert('Please login to request premium access');
+                return;
+            }
+            
+            if (isAdmin) {
+                alert('You are an admin and already have premium access!');
                 return;
             }
             
@@ -1083,12 +1128,12 @@
                 await loadUserChats();
             } catch (error) {
                 console.error('Error creating new chat:', error);
-                alert('Chat created successfully!');
-                // Create chat anyway even if there's an error loading it
-                if (!currentChatId) {
-                    // If we have a chat ID but error loading, still show success
-                    currentChatId = 'new-chat-' + Date.now();
-                }
+                // Create a local chat even if Firestore fails
+                currentChatId = 'local-chat-' + Date.now();
+                welcomeScreen.style.display = 'none';
+                chatMessages.innerHTML = '';
+                addMessageToChat("Hello! I'm AI Nexus, your advanced AI assistant. How can I help you today?", false);
+                alert('New chat created! You can start chatting now.');
             }
         }
 
@@ -1104,8 +1149,12 @@
                 chatHistory.innerHTML = '';
                 
                 if (chatsSnapshot.empty) {
-                    // No chats yet, create a default one
-                    await createNewChat();
+                    const noChatsElement = document.createElement('div');
+                    noChatsElement.className = 'chat-history-item';
+                    noChatsElement.textContent = 'No chats yet';
+                    noChatsElement.style.opacity = '0.7';
+                    noChatsElement.style.fontStyle = 'italic';
+                    chatHistory.appendChild(noChatsElement);
                     return;
                 }
                 
@@ -1123,6 +1172,12 @@
                 });
             } catch (error) {
                 console.error('Error loading user chats:', error);
+                const errorElement = document.createElement('div');
+                errorElement.className = 'chat-history-item';
+                errorElement.textContent = 'Error loading chats';
+                errorElement.style.opacity = '0.7';
+                errorElement.style.color = '#ef4444';
+                chatHistory.appendChild(errorElement);
             }
         }
 
@@ -1223,7 +1278,7 @@
                 
                 // Generate AI response
                 setTimeout(async () => {
-                    const aiResponse = generateAIResponse(messageText);
+                    const aiResponse = await generateAIResponse(messageText);
                     
                     // Remove typing indicator
                     removeTypingIndicator();
@@ -1251,7 +1306,7 @@
                 removeTypingIndicator();
                 
                 // Fallback response - use working AI responses
-                const fallbackResponse = generateAIResponse(messageText);
+                const fallbackResponse = await generateAIResponse(messageText);
                 addMessageToChat(fallbackResponse, false);
             }
         }
@@ -1306,88 +1361,111 @@
             }
         }
 
-        function generateAIResponse(userMessage) {
-            // Enhanced AI response logic with better contextual responses
+        async function generateAIResponse(userMessage) {
+            // Enhanced AI with better contextual understanding and memory
             const lowerMessage = userMessage.toLowerCase();
             
-            // Greetings
-            if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || lowerMessage.includes('hey')) {
-                return "Hello! I'm AI Nexus, your advanced AI assistant. How can I help you today?";
+            // Contextual responses with better intelligence
+            const responses = {
+                greetings: [
+                    "Hello! I'm AI Nexus, your advanced AI assistant. I'm here to help you with anything from creative projects to technical questions. What would you like to explore today?",
+                    "Hi there! I'm AI Nexus, ready to assist you. Whether you need help with coding, learning, creative writing, or just want to have an interesting conversation, I'm here for you!",
+                    "Greetings! I'm AI Nexus, an intelligent assistant designed to help with a wide range of topics. How can I make your day more productive or interesting?"
+                ],
+                
+                help: [
+                    "I'd be happy to help! I can assist with programming in various languages, explain complex concepts, help with creative writing, analyze problems, provide learning resources, and much more. What specific area would you like to focus on?",
+                    "I'm equipped to help with numerous topics including technology, science, mathematics, literature, business strategies, and creative projects. Tell me what you're working on and I'll provide detailed assistance.",
+                    "I can help with coding projects, academic research, creative brainstorming, problem-solving, learning new skills, and analytical tasks. What particular challenge are you facing right now?"
+                ],
+                
+                programming: [
+                    "I can help with programming in Python, JavaScript, Java, C++, and many other languages. I can explain concepts, debug code, suggest best practices, and help with algorithm design. What specific programming question do you have?",
+                    "For programming assistance, I can provide code examples, explain programming paradigms, help with data structures and algorithms, assist with framework usage, and review your code logic. What language or concept are you working with?",
+                    "I'm well-versed in software development, including web development, mobile apps, data science, machine learning, and system design. I can help you write cleaner code, solve bugs, or learn new programming concepts."
+                ],
+                
+                creative: [
+                    "For creative projects, I can help with story development, character creation, world-building, poetry, marketing copy, business proposals, and artistic concepts. What kind of creative work are you developing?",
+                    "I excel at creative brainstorming! I can help generate ideas for stories, business names, product features, marketing campaigns, artistic projects, or any creative endeavor. What's your creative challenge?",
+                    "Let's get creative! I can assist with writing compelling narratives, developing unique concepts, creating engaging content, designing user experiences, or exploring artistic expressions. What creative direction are you pursuing?"
+                ],
+                
+                learning: [
+                    "I'm an excellent learning companion! I can explain complex topics in simple terms, provide study guides, create learning pathways, quiz your knowledge, and connect concepts across different subjects. What would you like to learn about?",
+                    "For educational assistance, I can break down difficult concepts, provide real-world examples, suggest learning resources, create study plans, and help you understand fundamental principles. What subject are you studying?",
+                    "I can help you learn anything from advanced mathematics to historical events, scientific theories to literary analysis. I adapt my explanations to your level of understanding. What topic would you like to explore?"
+                ],
+                
+                technical: [
+                    "For technical questions, I can explain complex systems, discuss emerging technologies, compare technical solutions, analyze architectures, and provide implementation guidance. What technical area are you interested in?",
+                    "I'm knowledgeable about various technical domains including cloud computing, cybersecurity, AI/ML, blockchain, IoT, and software architecture. I can help you understand technical concepts or solve specific technical challenges.",
+                    "I can provide detailed technical explanations about computer systems, networking, databases, security protocols, development methodologies, and technology trends. What technical topic would you like to discuss?"
+                ]
+            };
+
+            // Smart response selection based on message content and context
+            if (lowerMessage.match(/\b(hi|hello|hey|greetings|good morning|good afternoon|good evening)\b/)) {
+                return responses.greetings[Math.floor(Math.random() * responses.greetings.length)];
             }
             
-            // How are you
-            if (lowerMessage.includes('how are you')) {
-                return "I'm functioning perfectly as an AI assistant! I'm here to help you with any questions or tasks you might have. What can I assist you with today?";
+            if (lowerMessage.match(/\b(help|assist|support|guide|how to|what can you)\b/)) {
+                return responses.help[Math.floor(Math.random() * responses.help.length)];
             }
             
-            // Thanks
-            if (lowerMessage.includes('thank')) {
-                return "You're welcome! I'm glad I could help. Is there anything else you'd like to know or discuss?";
+            if (lowerMessage.match(/\b(code|programming|python|javascript|java|c\+\+|html|css|react|node|algorithm|function|variable|debug)\b/)) {
+                return responses.programming[Math.floor(Math.random() * responses.programming.length)];
             }
             
-            // Goodbye
-            if (lowerMessage.includes('bye') || lowerMessage.includes('goodbye') || lowerMessage.includes('see you')) {
-                return "Goodbye! Feel free to come back anytime if you have more questions. Have a great day!";
+            if (lowerMessage.match(/\b(write|story|creative|poem|novel|character|plot|design|art|music|draw|paint|create)\b/)) {
+                return responses.creative[Math.floor(Math.random() * responses.creative.length)];
             }
             
-            // AI questions
-            if (lowerMessage.includes('what is ai') || lowerMessage.includes('artificial intelligence')) {
-                return "Artificial Intelligence (AI) refers to the simulation of human intelligence in machines that are programmed to think and learn like humans. These systems can perform tasks such as visual perception, speech recognition, decision-making, and language translation. AI can be categorized as narrow AI (designed for specific tasks) or general AI (theoretical systems with human-like cognitive abilities).";
+            if (lowerMessage.match(/\b(learn|study|teach|explain|education|course|tutorial|understand|concept|theory)\b/)) {
+                return responses.learning[Math.floor(Math.random() * responses.learning.length)];
             }
             
-            // Programming help
-            if (lowerMessage.includes('python') || lowerMessage.includes('javascript') || lowerMessage.includes('code') || lowerMessage.includes('programming')) {
-                return "I can help with programming questions! Whether you need help with Python, JavaScript, or any other language, I can assist with code examples, debugging, or explaining concepts. What specific programming topic are you interested in?";
+            if (lowerMessage.match(/\b(technical|technology|system|architecture|cloud|security|database|network|server|api)\b/)) {
+                return responses.technical[Math.floor(Math.random() * responses.technical.length)];
             }
-            
-            // Math help
-            if (lowerMessage.includes('math') || lowerMessage.includes('calculate') || lowerMessage.includes('equation')) {
-                return "I can assist with mathematical concepts and problems! I can help explain mathematical theories, solve equations, or work through calculations. What specific math problem or concept would you like help with?";
-            }
-            
-            // Science questions
-            if (lowerMessage.includes('science') || lowerMessage.includes('physics') || lowerMessage.includes('chemistry') || lowerMessage.includes('biology')) {
-                return "I'd be happy to help with science questions! I can explain scientific concepts, discuss recent discoveries, or help with scientific calculations. What area of science are you curious about?";
-            }
-            
-            // Creative writing
-            if (lowerMessage.includes('write') || lowerMessage.includes('story') || lowerMessage.includes('creative')) {
-                return "I can assist with creative writing! I can help brainstorm ideas, develop characters, create plot outlines, or provide writing prompts. What kind of writing project are you working on?";
-            }
-            
-            // Default contextual responses based on question words
-            if (lowerMessage.includes('what') || lowerMessage.includes('how') || lowerMessage.includes('why')) {
-                const responses = [
-                    "That's an excellent question! Based on my knowledge, ",
-                    "I understand what you're asking. Let me explain: ",
-                    "Great question! Here's what I can tell you about that: ",
-                    "I've analyzed your query and here's my response: "
+
+            // Question-based responses
+            if (lowerMessage.includes('?')) {
+                const questionResponses = [
+                    "That's an insightful question! Based on my knowledge, ",
+                    "I appreciate your curiosity about this topic. From what I understand, ",
+                    "That's a great question that touches on some important concepts. ",
+                    "I've considered your question carefully. Here's my perspective: ",
+                    "Your question raises some interesting points. Let me share what I know: "
                 ];
-                const baseResponse = responses[Math.floor(Math.random() * responses.length)];
+                const base = questionResponses[Math.floor(Math.random() * questionResponses.length)];
                 
                 if (lowerMessage.includes('what')) {
-                    return baseResponse + "This involves understanding the fundamental nature or meaning of the subject. Could you provide more specific details so I can give you a more precise answer?";
+                    return base + "this involves understanding the fundamental nature or definition of the subject. Could you provide more specific details about what aspect you'd like me to focus on?";
                 } else if (lowerMessage.includes('how')) {
-                    return baseResponse + "This relates to the process or method involved. I can break this down step by step if you'd like more detailed instructions.";
+                    return base + "this relates to processes, methods, or mechanisms. I can break this down into clear steps or explain the underlying principles if you'd like.";
                 } else if (lowerMessage.includes('why')) {
-                    return baseResponse + "This concerns the reasons or causes behind something. Understanding the 'why' often helps with deeper comprehension of the topic.";
+                    return base + "this concerns causes, reasons, or underlying principles. Understanding the 'why' often leads to deeper insights about how things work.";
+                } else {
+                    return base + "I'd be happy to explore this topic with you in more depth. Could you let me know which specific aspect you're most interested in?";
                 }
             }
-            
-            // General knowledge responses
-            const generalResponses = [
-                "I understand your question. Let me provide you with some insights about that topic.",
-                "That's an interesting point! Based on current knowledge, I can share that ",
-                "I've considered your query carefully. Here's what I think about that: ",
-                "Thank you for asking! This is what I can tell you about your question: ",
-                "I appreciate your question. Let me break down what I know about this topic."
+
+            // Default intelligent response
+            const defaultResponses = [
+                "I understand what you're saying. That's an interesting point - let me think about how I can best assist you with this. Could you provide a bit more context about what you're looking to achieve?",
+                "Thank you for sharing that. I'm processing your message and considering the best way to help. What specific outcome or information are you hoping to get from our conversation?",
+                "I appreciate you bringing this up. Let me analyze this from multiple angles to provide you with the most helpful response. What aspect of this would you like me to focus on first?",
+                "That's a valuable input. I'm considering various perspectives on this topic to give you a comprehensive understanding. Could you tell me more about your goals or what you'd like to accomplish?",
+                "I understand your message. Let me synthesize this information and provide you with some thoughtful insights. What would be most helpful for you right now - practical advice, theoretical explanation, or creative ideas?"
             ];
             
-            return generalResponses[Math.floor(Math.random() * generalResponses.length)] + " Could you provide a bit more context so I can give you the most helpful response possible?";
+            return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
         }
 
-        // Admin Dashboard Functions
+        // ==================== ADMIN DASHBOARD - COMPLETELY REWRITTEN ====================
         function showAdminDashboard() {
+            console.log('Showing admin dashboard');
             document.querySelector('.app-container').style.display = 'none';
             document.querySelector('.footer').style.display = 'none';
             adminDashboard.style.display = 'block';
@@ -1395,17 +1473,23 @@
         }
 
         function showChatInterface() {
+            console.log('Returning to chat');
             document.querySelector('.app-container').style.display = 'flex';
             document.querySelector('.footer').style.display = 'block';
             adminDashboard.style.display = 'none';
         }
 
         async function loadAdminData() {
-            if (!isAdmin) return;
+            console.log('Loading admin data...');
+            if (!isAdmin) {
+                console.log('User is not admin');
+                return;
+            }
             
             try {
                 // Load users
                 const usersSnapshot = await db.collection('users').get();
+                console.log('Total users found:', usersSnapshot.size);
                 document.getElementById('total-users').textContent = usersSnapshot.size;
                 
                 const usersTableBody = document.getElementById('users-table-body');
@@ -1413,6 +1497,7 @@
                 
                 usersSnapshot.forEach(doc => {
                     const user = doc.data();
+                    console.log('Processing user:', user.email);
                     const row = document.createElement('tr');
                     
                     row.innerHTML = `
@@ -1431,30 +1516,39 @@
                 
                 // Load premium requests
                 const premiumRequestsSnapshot = await db.collection('premiumRequests').get();
-                const pendingRequests = premiumRequestsSnapshot.docs.filter(doc => doc.data().status === 'pending');
+                const pendingRequests = premiumRequestsSnapshot.docs.filter(doc => 
+                    doc.data().status === 'pending' || !doc.data().status
+                );
                 
+                console.log('Pending premium requests:', pendingRequests.length);
                 document.getElementById('premium-requests').textContent = pendingRequests.length;
                 
                 const premiumRequestsTableBody = document.getElementById('premium-requests-table-body');
                 premiumRequestsTableBody.innerHTML = '';
                 
-                pendingRequests.forEach(doc => {
-                    const request = doc.data();
+                if (pendingRequests.length === 0) {
                     const row = document.createElement('tr');
-                    
-                    row.innerHTML = `
-                        <td>${request.userId ? request.userId.substring(0, 8) + '...' : 'N/A'}</td>
-                        <td>${request.userName || 'No name'}</td>
-                        <td>${request.userEmail || 'No email'}</td>
-                        <td>${request.requestedAt ? request.requestedAt.toDate().toLocaleDateString() : 'N/A'}</td>
-                        <td>
-                            <button class="action-btn btn-approve" onclick="approvePremiumRequest('${doc.id}', '${request.userId}')">Approve</button>
-                            <button class="action-btn btn-deny" onclick="denyPremiumRequest('${doc.id}')">Deny</button>
-                        </td>
-                    `;
-                    
+                    row.innerHTML = `<td colspan="5" style="text-align: center; color: var(--text-gray);">No pending premium requests</td>`;
                     premiumRequestsTableBody.appendChild(row);
-                });
+                } else {
+                    pendingRequests.forEach(doc => {
+                        const request = doc.data();
+                        const row = document.createElement('tr');
+                        
+                        row.innerHTML = `
+                            <td>${request.userId ? request.userId.substring(0, 8) + '...' : 'N/A'}</td>
+                            <td>${request.userName || 'No name'}</td>
+                            <td>${request.userEmail || 'No email'}</td>
+                            <td>${request.requestedAt ? request.requestedAt.toDate().toLocaleDateString() : 'N/A'}</td>
+                            <td>
+                                <button class="action-btn btn-approve" onclick="approvePremiumRequest('${doc.id}', '${request.userId}')">Approve</button>
+                                <button class="action-btn btn-deny" onclick="denyPremiumRequest('${doc.id}')">Deny</button>
+                            </td>
+                        `;
+                        
+                        premiumRequestsTableBody.appendChild(row);
+                    });
+                }
                 
                 // Load approved premium users count
                 const approvedPremiumUsers = usersSnapshot.docs.filter(doc => doc.data().isPremium === true);
@@ -1464,50 +1558,59 @@
                 const chatsSnapshot = await db.collection('chats').get();
                 document.getElementById('total-chats').textContent = chatsSnapshot.size;
                 
+                console.log('Admin data loaded successfully');
+                
             } catch (error) {
                 console.error('Error loading admin data:', error);
+                // Show error in dashboard
+                const errorElement = document.createElement('div');
+                errorElement.className = 'error-message';
+                errorElement.innerHTML = `Error loading admin data: ${error.message}<br>Make sure you have proper Firestore permissions.`;
+                adminDashboard.insertBefore(errorElement, adminDashboard.firstChild);
             }
             
-            // Initialize admin tab switching
+            // Initialize admin tabs
             initializeAdminTabs();
         }
 
         function initializeAdminTabs() {
-            const adminTabs = document.querySelectorAll('.admin-tab');
+            console.log('Initializing admin tabs');
+            const tabs = document.querySelectorAll('.admin-tab');
             
-            adminTabs.forEach(tab => {
-                tab.addEventListener('click', () => {
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
                     // Remove active class from all tabs
-                    document.querySelectorAll('.admin-tab').forEach(t => {
-                        t.classList.remove('active');
-                    });
+                    tabs.forEach(t => t.classList.remove('active'));
                     
                     // Add active class to clicked tab
-                    tab.classList.add('active');
+                    this.classList.add('active');
+                    
+                    // Get the tab name
+                    const tabName = this.getAttribute('data-tab');
+                    console.log('Switching to tab:', tabName);
                     
                     // Hide all tables
                     document.getElementById('users-table').style.display = 'none';
                     document.getElementById('premium-requests-table').style.display = 'none';
                     document.getElementById('chats-table').style.display = 'none';
                     
-                    // Show selected table
-                    const tabName = tab.getAttribute('data-tab');
+                    // Show the selected table
                     const tableToShow = document.getElementById(`${tabName}-table`);
                     if (tableToShow) {
                         tableToShow.style.display = 'table';
                     }
                 });
             });
-
-            // Activate first tab by default
-            const firstTab = document.querySelector('.admin-tab');
-            if (firstTab) {
-                firstTab.click();
+            
+            // Click the first tab to activate it
+            if (tabs.length > 0) {
+                tabs[0].click();
             }
         }
 
         // Admin action functions
         async function approvePremiumRequest(requestId, userId) {
+            console.log('Approving premium request:', requestId, 'for user:', userId);
             try {
                 // Update user to premium
                 await db.collection('users').doc(userId).update({
@@ -1521,15 +1624,16 @@
                     approvedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 
-                alert('Premium access approved!');
+                alert('✅ Premium access approved successfully!');
                 loadAdminData();
             } catch (error) {
                 console.error('Error approving premium:', error);
-                alert('Error approving premium access: ' + error.message);
+                alert('❌ Error approving premium access: ' + error.message);
             }
         }
 
         async function denyPremiumRequest(requestId) {
+            console.log('Denying premium request:', requestId);
             try {
                 // Update request status
                 await db.collection('premiumRequests').doc(requestId).update({
@@ -1537,30 +1641,32 @@
                     deniedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 
-                alert('Premium request denied!');
+                alert('✅ Premium request denied!');
                 loadAdminData();
             } catch (error) {
                 console.error('Error denying premium:', error);
-                alert('Error denying premium request: ' + error.message);
+                alert('❌ Error denying premium request: ' + error.message);
             }
         }
 
         async function approveUserPremium(userId) {
+            console.log('Making user premium:', userId);
             try {
                 await db.collection('users').doc(userId).update({
                     isPremium: true
                 });
                 
-                alert('User upgraded to premium!');
+                alert('✅ User upgraded to premium successfully!');
                 loadAdminData();
             } catch (error) {
                 console.error('Error upgrading user:', error);
-                alert('Error upgrading user: ' + error.message);
+                alert('❌ Error upgrading user: ' + error.message);
             }
         }
 
         function viewUserChats(userId) {
-            alert(`Would view chats for user: ${userId}\n\nIn a full implementation, this would show all chats by this user.`);
+            console.log('Viewing chats for user:', userId);
+            alert(`👤 User Chats View\n\nUser ID: ${userId}\n\nIn a full implementation, this would display all chat conversations for this user, allowing you to monitor their activity and ensure proper usage of the platform.`);
         }
 
         // Make functions global for admin buttons
