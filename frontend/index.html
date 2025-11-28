@@ -657,86 +657,86 @@
             </div>
         </div>
 
-        <!-- Admin Dashboard -->
-        <div class="admin-dashboard" id="admin-dashboard">
-            <div class="dashboard-header">
-                <h1>Admin Dashboard</h1>
-                <button class="auth-button" id="back-to-chat-btn">Back to Chat</button>
+    <!-- Admin Dashboard -->
+    <div class="admin-dashboard" id="admin-dashboard">
+        <div class="dashboard-header">
+            <h1>Admin Dashboard</h1>
+            <button class="auth-button" id="back-to-chat-btn">Back to Chat</button>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="total-users">0</div>
+                <div class="stat-label">Total Users</div>
             </div>
-            
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-value" id="total-users">0</div>
-                    <div class="stat-label">Total Users</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="premium-requests">0</div>
-                    <div class="stat-label">Premium Requests</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="approved-premium">0</div>
-                    <div class="stat-label">Approved Premium</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="total-chats">0</div>
-                    <div class="stat-label">Total Chats</div>
-                </div>
+            <div class="stat-card">
+                <div class="stat-value" id="premium-requests">0</div>
+                <div class="stat-label">Premium Requests</div>
             </div>
-            
-            <div class="admin-tabs">
-                <div class="admin-tab active" data-tab="users">Users</div>
-                <div class="admin-tab" data-tab="premium-requests">Premium Requests</div>
-                <div class="admin-tab" data-tab="chats">Chats</div>
+            <div class="stat-card">
+                <div class="stat-value" id="approved-premium">0</div>
+                <div class="stat-label">Approved Premium</div>
             </div>
-            
-            <div class="admin-table-container">
-                <table class="admin-table" id="users-table">
-                    <thead>
-                        <tr>
-                            <th>User ID</th>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="users-table-body">
-                        <!-- Users will be populated by JavaScript -->
-                    </tbody>
-                </table>
-                
-                <table class="admin-table" id="premium-requests-table" style="display: none;">
-                    <thead>
-                        <tr>
-                            <th>User ID</th>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Request Date</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="premium-requests-table-body">
-                        <!-- Premium requests will be populated by JavaScript -->
-                    </tbody>
-                </table>
-                
-                <table class="admin-table" id="chats-table" style="display: none;">
-                    <thead>
-                        <tr>
-                            <th>Chat ID</th>
-                            <th>User</th>
-                            <th>Title</th>
-                            <th>Messages</th>
-                            <th>Created</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="chats-table-body">
-                        <!-- Chats will be populated by JavaScript -->
-                    </tbody>
-                </table>
+            <div class="stat-card">
+                <div class="stat-value" id="total-chats">0</div>
+                <div class="stat-label">Total Chats</div>
             </div>
         </div>
+        
+        <div class="admin-tabs">
+            <div class="admin-tab active" data-tab="users">Users</div>
+            <div class="admin-tab" data-tab="premium-requests">Premium Requests</div>
+            <div class="admin-tab" data-tab="chats">Chats</div>
+        </div>
+        
+        <div class="admin-table-container">
+            <table class="admin-table" id="users-table">
+                <thead>
+                    <tr>
+                        <th>User ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="users-table-body">
+                    <!-- Users will be populated by JavaScript -->
+                </tbody>
+            </table>
+            
+            <table class="admin-table" id="premium-requests-table" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>User ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Request Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="premium-requests-table-body">
+                    <!-- Premium requests will be populated by JavaScript -->
+                </tbody>
+            </table>
+            
+            <table class="admin-table" id="chats-table" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>Chat ID</th>
+                        <th>User</th>
+                        <th>Title</th>
+                        <th>Messages</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="chats-table-body">
+                    <!-- Chats will be populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
     </div>
 
     <!-- Footer -->
