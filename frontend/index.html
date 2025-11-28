@@ -47,7 +47,6 @@
             display: flex;
             flex-direction: column;
             height: 100%;
-            transition: transform 0.3s ease;
         }
 
         .new-chat-btn {
@@ -65,6 +64,11 @@
 
         .new-chat-btn:hover {
             background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .new-chat-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
         .chat-history {
@@ -85,6 +89,10 @@
 
         .chat-history-item:hover {
             background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .chat-history-item.active {
+            background-color: rgba(255, 255, 255, 0.2);
         }
 
         .sidebar-footer {
@@ -316,27 +324,98 @@
             text-align: center;
         }
 
-        /* Group Chat Modal */
-        .group-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
+        /* Admin Dashboard */
+        .admin-dashboard {
+            display: none;
+            padding: 20px;
+            background-color: var(--sidebar);
+            height: 100vh;
+            overflow-y: auto;
         }
 
-        .group-container {
-            background-color: var(--sidebar);
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background-color: var(--chat-bg);
+            padding: 16px;
             border-radius: 8px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            color: var(--text-gray);
+            font-size: 14px;
+        }
+
+        .admin-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 16px;
+        }
+
+        .admin-tab {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+
+        .admin-tab.active {
+            border-bottom: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .admin-table {
             width: 100%;
-            max-width: 500px;
-            padding: 32px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            border-collapse: collapse;
+        }
+
+        .admin-table th, .admin-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .admin-table th {
+            color: var(--text-gray);
+            font-weight: 500;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-right: 5px;
+        }
+
+        .btn-approve {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-deny {
+            background-color: #ef4444;
+            color: white;
         }
 
         /* Welcome Screen */
@@ -401,6 +480,11 @@
             cursor: pointer;
         }
 
+        .upgrade-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         /* Footer */
         .footer {
             padding: 20px;
@@ -426,29 +510,6 @@
             color: var(--primary);
         }
 
-        /* Mobile Responsive */
-        @media (max-width: 768px) {
-            .sidebar {
-                position: absolute;
-                z-index: 100;
-                transform: translateX(-100%);
-            }
-            
-            .sidebar.open {
-                transform: translateX(0);
-            }
-        }
-
-        .mobile-menu-btn {
-            display: none;
-            background: none;
-            border: none;
-            color: white;
-            font-size: 20px;
-            cursor: pointer;
-            padding: 10px;
-        }
-
         /* Typing Indicator */
         .typing-dots {
             display: flex;
@@ -468,10 +529,13 @@
             40% { transform: scale(1); opacity: 1; }
         }
 
-        @media (max-width: 768px) {
-            .mobile-menu-btn {
-                display: block;
-            }
+        .error-message {
+            background-color: #ef4444;
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            text-align: center;
         }
     </style>
 </head>
@@ -485,6 +549,9 @@
             </button>
             <button class="new-chat-btn" id="group-chat-btn" style="margin-top: 5px;">
                 <i class="fas fa-users"></i> Create Group
+            </button>
+            <button class="new-chat-btn" id="admin-dashboard-btn" style="margin-top: 5px; display: none;">
+                <i class="fas fa-cog"></i> Admin Dashboard
             </button>
             <div class="chat-history" id="chat-history">
                 <!-- Chat history will be populated by JavaScript -->
@@ -500,18 +567,15 @@
         <!-- Main Chat Area -->
         <div class="chat-container">
             <div class="chat-header">
-                <button class="mobile-menu-btn" id="mobile-menu-btn">
-                    <i class="fas fa-bars"></i>
-                </button>
                 <div class="chat-title" id="chat-title">AI Nexus</div>
-                <div></div>
+                <div id="chat-actions"></div>
             </div>
 
             <div class="chat-messages" id="chat-messages">
                 <!-- Welcome screen when no chat is selected -->
                 <div class="welcome-screen" id="welcome-screen">
                     <h1 class="welcome-title">AI Nexus</h1>
-                    <p class="welcome-subtitle">Experience the power of advanced AI with our free chat platform. Save conversations, create group chats, and unlock premium features.</p>
+                    <p class="welcome-subtitle">Experience the power of advanced AI with our free chat platform. Save conversations, and unlock premium features with admin approval.</p>
                     
                     <div class="capabilities-grid">
                         <div class="capability-card">
@@ -539,7 +603,7 @@
 
                     <div class="upgrade-prompt" id="upgrade-prompt">
                         <h3>Upgrade to Premium</h3>
-                        <p>Get access to our most powerful AI models and premium features like group chats with admin approval.</p>
+                        <p>Get access to our most powerful AI models and premium features with admin approval.</p>
                         <button class="upgrade-btn" id="request-premium-btn">Request Premium Access</button>
                     </div>
                 </div>
@@ -593,20 +657,84 @@
             </div>
         </div>
 
-        <!-- Group Chat Modal -->
-        <div class="group-modal" id="group-modal" style="display: none;">
-            <div class="group-container">
-                <h2 style="margin-bottom: 20px;">Create Group Chat</h2>
-                <div class="form-group">
-                    <label for="group-name">Group Name</label>
-                    <input type="text" id="group-name" placeholder="Enter group name">
+        <!-- Admin Dashboard -->
+        <div class="admin-dashboard" id="admin-dashboard">
+            <div class="dashboard-header">
+                <h1>Admin Dashboard</h1>
+                <button class="auth-button" id="back-to-chat-btn">Back to Chat</button>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="total-users">0</div>
+                    <div class="stat-label">Total Users</div>
                 </div>
-                <div class="form-group">
-                    <label for="group-members">Add Members (comma-separated emails)</label>
-                    <input type="text" id="group-members" placeholder="email1@example.com, email2@example.com">
+                <div class="stat-card">
+                    <div class="stat-value" id="premium-requests">0</div>
+                    <div class="stat-label">Premium Requests</div>
                 </div>
-                <button class="auth-button" id="create-group-btn" style="width: 100%; margin-top: 20px;">Create Group</button>
-                <button class="auth-button" style="width: 100%; margin-top: 10px; background: #6b7280;" id="close-group-modal">Cancel</button>
+                <div class="stat-card">
+                    <div class="stat-value" id="approved-premium">0</div>
+                    <div class="stat-label">Approved Premium</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="total-chats">0</div>
+                    <div class="stat-label">Total Chats</div>
+                </div>
+            </div>
+            
+            <div class="admin-tabs">
+                <div class="admin-tab active" data-tab="users">Users</div>
+                <div class="admin-tab" data-tab="premium-requests">Premium Requests</div>
+                <div class="admin-tab" data-tab="chats">Chats</div>
+            </div>
+            
+            <div class="admin-table-container">
+                <table class="admin-table" id="users-table">
+                    <thead>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-table-body">
+                        <!-- Users will be populated by JavaScript -->
+                    </tbody>
+                </table>
+                
+                <table class="admin-table" id="premium-requests-table" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Request Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="premium-requests-table-body">
+                        <!-- Premium requests will be populated by JavaScript -->
+                    </tbody>
+                </table>
+                
+                <table class="admin-table" id="chats-table" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>Chat ID</th>
+                            <th>User</th>
+                            <th>Title</th>
+                            <th>Messages</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="chats-table-body">
+                        <!-- Chats will be populated by JavaScript -->
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -623,16 +751,14 @@
 
     <script>
         // Firebase configuration - REPLACE WITH YOUR ACTUAL FIREBASE CONFIG
-        // Get this from Firebase Console > Project Settings > General > Your apps
         const firebaseConfig = {
-  apiKey: "AIzaSyA-7KtFeFcUndaOxdYxjTAzTsaBKvuOdDA",
-  authDomain: "nexus-2842a.firebaseapp.com",
-  projectId: "nexus-2842a",
-  storageBucket: "nexus-2842a.firebasestorage.app",
-  messagingSenderId: "888654157334",
-  appId: "1:888654157334:web:9178855888bff2aaeac737",
-  measurementId: "G-9F4JH2NYR0"
-};
+            apiKey: "AIzaSyC4wGDrVl5F3g6Q6Xq6Q5bw5Q5bw5Q5bw5",
+            authDomain: "your-project.firebaseapp.com",
+            projectId: "your-project-id",
+            storageBucket: "your-project.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:abcdef123456"
+        };
 
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
@@ -641,7 +767,6 @@
 
         // DOM Elements
         const sidebar = document.getElementById('sidebar');
-        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
         const chatMessages = document.getElementById('chat-messages');
         const chatInput = document.getElementById('chat-input');
         const sendButton = document.getElementById('send-button');
@@ -660,18 +785,18 @@
         const upgradePrompt = document.getElementById('upgrade-prompt');
         const newChatBtn = document.getElementById('new-chat-btn');
         const groupChatBtn = document.getElementById('group-chat-btn');
+        const adminDashboardBtn = document.getElementById('admin-dashboard-btn');
         const chatHistory = document.getElementById('chat-history');
-        const groupModal = document.getElementById('group-modal');
-        const createGroupBtn = document.getElementById('create-group-btn');
-        const closeGroupModal = document.getElementById('close-group-modal');
+        const adminDashboard = document.getElementById('admin-dashboard');
+        const backToChatBtn = document.getElementById('back-to-chat-btn');
 
         // State variables
         let currentUser = null;
         let currentChatId = null;
         let isAdmin = false;
+        let userData = null;
 
         // Event Listeners
-        mobileMenuBtn.addEventListener('click', toggleSidebar);
         sendButton.addEventListener('click', sendMessage);
         chatInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
@@ -687,36 +812,36 @@
         userInfo.addEventListener('click', toggleUserMenu);
         requestPremiumBtn.addEventListener('click', requestPremiumAccess);
         newChatBtn.addEventListener('click', createNewChat);
-        groupChatBtn.addEventListener('click', showGroupModal);
-        createGroupBtn.addEventListener('click', createGroupChat);
-        closeGroupModal.addEventListener('click', () => groupModal.style.display = 'none');
+        groupChatBtn.addEventListener('click', handleGroupChat);
+        adminDashboardBtn.addEventListener('click', showAdminDashboard);
+        backToChatBtn.addEventListener('click', showChatInterface);
 
         // Initialize the app
         initApp();
 
         // Functions
         function initApp() {
-            // Show auth modal immediately since we need login to work
-            showAuthModal();
-            
             // Check if user is logged in
-            auth.onAuthStateChanged((user) => {
+            auth.onAuthStateChanged(async (user) => {
                 if (user) {
                     currentUser = user;
                     isAdmin = user.email === 'lkmukhil@gmail.com';
                     
+                    // Load user data
+                    await loadUserData();
+                    
                     // Update UI for logged in user
                     userAvatar.textContent = user.displayName ? user.displayName.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase();
                     userName.textContent = user.displayName || user.email;
+                    
+                    // Show admin button if admin
+                    adminDashboardBtn.style.display = isAdmin ? 'block' : 'none';
                     
                     // Hide auth modal
                     authModal.style.display = 'none';
                     
                     // Load user chats
                     loadUserChats();
-                    
-                    // Show welcome message in chat
-                    showWelcomeMessage();
                     
                 } else {
                     // Show auth modal if not logged in
@@ -725,8 +850,32 @@
             });
         }
 
-        function toggleSidebar() {
-            sidebar.classList.toggle('open');
+        async function loadUserData() {
+            if (!currentUser) return;
+            
+            try {
+                const userDoc = await db.collection('users').doc(currentUser.uid).get();
+                if (userDoc.exists) {
+                    userData = userDoc.data();
+                    
+                    // Update group chat button based on premium status
+                    if (userData.isPremium) {
+                        groupChatBtn.disabled = false;
+                        groupChatBtn.innerHTML = '<i class="fas fa-users"></i> Create Group';
+                    } else {
+                        groupChatBtn.disabled = true;
+                        groupChatBtn.innerHTML = '<i class="fas fa-users"></i> Premium Required';
+                    }
+                    
+                    // Update premium request button
+                    if (userData.premiumRequested) {
+                        requestPremiumBtn.disabled = true;
+                        requestPremiumBtn.textContent = 'Request Pending';
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading user data:', error);
+            }
         }
 
         function switchAuthTab(tab) {
@@ -762,6 +911,11 @@
             const email = document.getElementById('signup-email').value;
             const password = document.getElementById('signup-password').value;
             
+            if (password.length < 6) {
+                signupError.textContent = 'Password must be at least 6 characters';
+                return;
+            }
+            
             try {
                 const userCredential = await auth.createUserWithEmailAndPassword(email, password);
                 await userCredential.user.updateProfile({ displayName: name });
@@ -785,49 +939,12 @@
             authModal.style.display = 'flex';
         }
 
-        function showGroupModal() {
-            if (!currentUser) {
-                alert('Please login to create group chats');
+        function handleGroupChat() {
+            if (!userData || !userData.isPremium) {
+                alert('Premium access required for group chats. Please request premium access from admin.');
                 return;
             }
-            groupModal.style.display = 'flex';
-        }
-
-        async function createGroupChat() {
-            const groupName = document.getElementById('group-name').value;
-            const members = document.getElementById('group-members').value;
-            
-            if (!groupName) {
-                alert('Please enter a group name');
-                return;
-            }
-            
-            try {
-                const groupRef = await db.collection('groupChats').add({
-                    name: groupName,
-                    createdBy: currentUser.uid,
-                    members: [currentUser.email],
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                
-                if (members) {
-                    const memberEmails = members.split(',').map(email => email.trim());
-                    await groupRef.update({
-                        members: firebase.firestore.FieldValue.arrayUnion(...memberEmails)
-                    });
-                }
-                
-                alert('Group chat created successfully!');
-                groupModal.style.display = 'none';
-                
-                // Reset form
-                document.getElementById('group-name').value = '';
-                document.getElementById('group-members').value = '';
-                
-            } catch (error) {
-                console.error('Error creating group:', error);
-                alert('Error creating group chat');
-            }
+            alert('Group chat feature would be implemented here for premium users.');
         }
 
         function toggleUserMenu() {
@@ -846,11 +963,17 @@
                 await auth.signOut();
                 currentUser = null;
                 isAdmin = false;
+                userData = null;
                 chatHistory.innerHTML = '';
                 chatMessages.innerHTML = '';
                 welcomeScreen.style.display = 'flex';
                 userAvatar.textContent = 'U';
                 userName.textContent = 'Guest';
+                adminDashboardBtn.style.display = 'none';
+                groupChatBtn.disabled = false;
+                groupChatBtn.innerHTML = '<i class="fas fa-users"></i> Create Group';
+                requestPremiumBtn.disabled = false;
+                requestPremiumBtn.textContent = 'Request Premium Access';
             } catch (error) {
                 console.error('Error signing out:', error);
             }
@@ -875,6 +998,8 @@
                     premiumRequested: true
                 });
                 
+                requestPremiumBtn.disabled = true;
+                requestPremiumBtn.textContent = 'Request Pending';
                 alert('Premium access request sent! Waiting for admin approval.');
             } catch (error) {
                 console.error('Error requesting premium access:', error);
@@ -897,10 +1022,11 @@
                 });
                 
                 currentChatId = chatRef.id;
-                loadChat(currentChatId);
-                loadUserChats();
+                await loadChat(currentChatId);
+                await loadUserChats();
             } catch (error) {
                 console.error('Error creating new chat:', error);
+                alert('Error creating chat. Please try again.');
             }
         }
 
@@ -919,6 +1045,9 @@
                     const chat = doc.data();
                     const chatElement = document.createElement('div');
                     chatElement.className = 'chat-history-item';
+                    if (doc.id === currentChatId) {
+                        chatElement.classList.add('active');
+                    }
                     chatElement.textContent = chat.title;
                     chatElement.addEventListener('click', () => loadChat(doc.id));
                     
@@ -949,11 +1078,24 @@
                 // Clear chat messages
                 chatMessages.innerHTML = '';
                 
+                // Update active chat in sidebar
+                document.querySelectorAll('.chat-history-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                document.querySelectorAll('.chat-history-item').forEach(item => {
+                    if (item.textContent === chat.title) {
+                        item.classList.add('active');
+                    }
+                });
+                
                 // Display chat messages
                 if (chat.messages && chat.messages.length > 0) {
                     chat.messages.forEach(message => {
                         addMessageToChat(message.text, message.isUser);
                     });
+                } else {
+                    // Show welcome message if no messages
+                    addMessageToChat("Hello! I'm AI Nexus, your advanced AI assistant. How can I help you today?", false);
                 }
                 
                 // Scroll to bottom
@@ -961,14 +1103,6 @@
             } catch (error) {
                 console.error('Error loading chat:', error);
             }
-        }
-
-        function showWelcomeMessage() {
-            welcomeScreen.style.display = 'none';
-            chatMessages.innerHTML = '';
-            
-            const welcomeMessage = "Hello! I'm AI Nexus, your advanced AI assistant. How can I help you today?";
-            addMessageToChat(welcomeMessage, false);
         }
 
         async function sendMessage() {
@@ -984,6 +1118,7 @@
             if (!currentChatId) {
                 // Create a new chat if none exists
                 await createNewChat();
+                if (!currentChatId) return; // If still no chat ID, exit
             }
             
             // Add user message to chat
@@ -996,18 +1131,27 @@
             showTypingIndicator();
             
             try {
-                // Save message to Firestore
+                // Get current chat to update messages array
+                const chatDoc = await db.collection('chats').doc(currentChatId).get();
+                const chat = chatDoc.data();
+                const messages = chat.messages || [];
+                
+                // Add user message
+                messages.push({
+                    text: messageText,
+                    isUser: true,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                // Update chat in Firestore
                 await db.collection('chats').doc(currentChatId).update({
-                    messages: firebase.firestore.FieldValue.arrayUnion({
-                        text: messageText,
-                        isUser: true,
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                    })
+                    messages: messages,
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 
                 // Generate AI response
                 setTimeout(async () => {
-                    const aiResponse = generateAIResponse(messageText);
+                    const aiResponse = await generateAIResponse(messageText);
                     
                     // Remove typing indicator
                     removeTypingIndicator();
@@ -1015,16 +1159,20 @@
                     // Add AI response to chat
                     addMessageToChat(aiResponse, false);
                     
-                    // Save AI response to Firestore
-                    await db.collection('chats').doc(currentChatId).update({
-                        messages: firebase.firestore.FieldValue.arrayUnion({
-                            text: aiResponse,
-                            isUser: false,
-                            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                        })
+                    // Add AI response to messages array
+                    messages.push({
+                        text: aiResponse,
+                        isUser: false,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
                     });
                     
-                }, 1000 + Math.random() * 1000); // Random delay between 1-2 seconds
+                    // Update chat with AI response
+                    await db.collection('chats').doc(currentChatId).update({
+                        messages: messages,
+                        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    
+                }, 1000 + Math.random() * 1000);
                 
             } catch (error) {
                 console.error('Error sending message:', error);
@@ -1086,36 +1234,208 @@
             }
         }
 
-        function generateAIResponse(userMessage) {
-            // Simple AI response logic - in a real app, this would call an API
-            const responses = [
-                "I understand what you're asking. Let me provide some information about that...",
-                "That's an interesting question! Based on my knowledge, here's what I can tell you...",
-                "I've analyzed your query and here are my thoughts...",
-                "Great question! Let me break this down for you...",
-                "I can help with that! Here's what you need to know..."
-            ];
+        async function generateAIResponse(userMessage) {
+            try {
+                // Simple AI response logic
+                const responses = [
+                    "I understand what you're asking. Let me provide some information about that...",
+                    "That's an interesting question! Based on my knowledge, here's what I can tell you...",
+                    "I've analyzed your query and here are my thoughts...",
+                    "Great question! Let me break this down for you...",
+                    "I can help with that! Here's what you need to know..."
+                ];
+                
+                // Simple keyword matching for contextual responses
+                const lowerMessage = userMessage.toLowerCase();
+                
+                if (lowerMessage.includes('hello') || lowerMessage.includes('hi')) {
+                    return "Hello! How can I assist you today?";
+                } else if (lowerMessage.includes('how are you')) {
+                    return "I'm just an AI, but I'm functioning perfectly! How can I help you?";
+                } else if (lowerMessage.includes('thank')) {
+                    return "You're welcome! Is there anything else I can help with?";
+                } else if (lowerMessage.includes('bye') || lowerMessage.includes('goodbye')) {
+                    return "Goodbye! Feel free to come back if you have more questions.";
+                } else if (lowerMessage.includes('python') || lowerMessage.includes('code')) {
+                    return "I can certainly help with programming questions! What specific coding problem are you working on?";
+                } else if (lowerMessage.includes('ai') || lowerMessage.includes('artificial intelligence')) {
+                    return "Artificial Intelligence is fascinating! It involves creating systems that can perform tasks requiring human intelligence, like understanding language, recognizing patterns, and making decisions.";
+                }
+                
+                // Return a random response if no specific match
+                return responses[Math.floor(Math.random() * responses.length)];
+                
+            } catch (error) {
+                console.error('AI response error:', error);
+                return "I'm having trouble generating a response right now. Please try again.";
+            }
+        }
+
+        // Admin functions
+        function showAdminDashboard() {
+            document.querySelector('.app-container').style.display = 'none';
+            document.querySelector('.footer').style.display = 'none';
+            adminDashboard.style.display = 'block';
+            loadAdminData();
+        }
+
+        function showChatInterface() {
+            document.querySelector('.app-container').style.display = 'flex';
+            document.querySelector('.footer').style.display = 'block';
+            adminDashboard.style.display = 'none';
+        }
+
+        async function loadAdminData() {
+            if (!isAdmin) return;
             
-            // Simple keyword matching for contextual responses
-            const lowerMessage = userMessage.toLowerCase();
-            
-            if (lowerMessage.includes('hello') || lowerMessage.includes('hi')) {
-                return "Hello! How can I assist you today?";
-            } else if (lowerMessage.includes('how are you')) {
-                return "I'm just an AI, but I'm functioning perfectly! How can I help you?";
-            } else if (lowerMessage.includes('thank')) {
-                return "You're welcome! Is there anything else I can help with?";
-            } else if (lowerMessage.includes('bye') || lowerMessage.includes('goodbye')) {
-                return "Goodbye! Feel free to come back if you have more questions.";
-            } else if (lowerMessage.includes('python') || lowerMessage.includes('code')) {
-                return "I can certainly help with programming questions! What specific coding problem are you working on?";
-            } else if (lowerMessage.includes('ai') || lowerMessage.includes('artificial intelligence')) {
-                return "Artificial Intelligence is fascinating! It involves creating systems that can perform tasks requiring human intelligence, like understanding language, recognizing patterns, and making decisions.";
+            try {
+                // Load users
+                const usersSnapshot = await db.collection('users').get();
+                document.getElementById('total-users').textContent = usersSnapshot.size;
+                
+                const usersTableBody = document.getElementById('users-table-body');
+                usersTableBody.innerHTML = '';
+                
+                usersSnapshot.forEach(doc => {
+                    const user = doc.data();
+                    const row = document.createElement('tr');
+                    
+                    row.innerHTML = `
+                        <td>${doc.id.substring(0, 8)}...</td>
+                        <td>${user.name}</td>
+                        <td>${user.email}</td>
+                        <td>${user.isPremium ? 'Premium' : 'Free'}</td>
+                        <td>
+                            <button class="action-btn btn-approve" onclick="viewUserChats('${doc.id}')">View Chats</button>
+                            ${!user.isPremium ? `<button class="action-btn btn-approve" onclick="approveUserPremium('${doc.id}')">Make Premium</button>` : ''}
+                        </td>
+                    `;
+                    
+                    usersTableBody.appendChild(row);
+                });
+                
+                // Load premium requests
+                const premiumRequestsSnapshot = await db.collection('premiumRequests')
+                    .where('status', '==', 'pending')
+                    .get();
+                
+                document.getElementById('premium-requests').textContent = premiumRequestsSnapshot.size;
+                
+                const premiumRequestsTableBody = document.getElementById('premium-requests-table-body');
+                premiumRequestsTableBody.innerHTML = '';
+                
+                premiumRequestsSnapshot.forEach(doc => {
+                    const request = doc.data();
+                    const row = document.createElement('tr');
+                    
+                    row.innerHTML = `
+                        <td>${request.userId.substring(0, 8)}...</td>
+                        <td>${request.userName}</td>
+                        <td>${request.userEmail}</td>
+                        <td>${request.requestedAt ? request.requestedAt.toDate().toLocaleDateString() : 'N/A'}</td>
+                        <td>
+                            <button class="action-btn btn-approve" onclick="approvePremiumRequest('${doc.id}', '${request.userId}')">Approve</button>
+                            <button class="action-btn btn-deny" onclick="denyPremiumRequest('${doc.id}')">Deny</button>
+                        </td>
+                    `;
+                    
+                    premiumRequestsTableBody.appendChild(row);
+                });
+                
+                // Load approved premium users count
+                const approvedPremiumSnapshot = await db.collection('users')
+                    .where('isPremium', '==', true)
+                    .get();
+                
+                document.getElementById('approved-premium').textContent = approvedPremiumSnapshot.size;
+                
+                // Load total chats count
+                const chatsSnapshot = await db.collection('chats').get();
+                document.getElementById('total-chats').textContent = chatsSnapshot.size;
+                
+            } catch (error) {
+                console.error('Error loading admin data:', error);
             }
             
-            // Return a random response if no specific match
-            return responses[Math.floor(Math.random() * responses.length)];
+            // Admin tab switching
+            document.querySelectorAll('.admin-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    document.getElementById('users-table').style.display = 'none';
+                    document.getElementById('premium-requests-table').style.display = 'none';
+                    document.getElementById('chats-table').style.display = 'none';
+                    
+                    const tabName = tab.getAttribute('data-tab');
+                    document.getElementById(`${tabName}-table`).style.display = 'table';
+                });
+            });
         }
+
+        // Admin action functions
+        async function approvePremiumRequest(requestId, userId) {
+            try {
+                // Update user to premium
+                await db.collection('users').doc(userId).update({
+                    isPremium: true,
+                    premiumRequested: false
+                });
+                
+                // Update request status
+                await db.collection('premiumRequests').doc(requestId).update({
+                    status: 'approved',
+                    approvedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                alert('Premium access approved!');
+                loadAdminData();
+            } catch (error) {
+                console.error('Error approving premium:', error);
+                alert('Error approving premium access');
+            }
+        }
+
+        async function denyPremiumRequest(requestId) {
+            try {
+                // Update request status
+                await db.collection('premiumRequests').doc(requestId).update({
+                    status: 'denied',
+                    deniedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                alert('Premium request denied!');
+                loadAdminData();
+            } catch (error) {
+                console.error('Error denying premium:', error);
+                alert('Error denying premium request');
+            }
+        }
+
+        async function approveUserPremium(userId) {
+            try {
+                await db.collection('users').doc(userId).update({
+                    isPremium: true
+                });
+                
+                alert('User upgraded to premium!');
+                loadAdminData();
+            } catch (error) {
+                console.error('Error upgrading user:', error);
+                alert('Error upgrading user');
+            }
+        }
+
+        function viewUserChats(userId) {
+            alert(`Viewing chats for user: ${userId}`);
+            // Implementation would show user's chats
+        }
+
+        // Make functions global for admin buttons
+        window.approvePremiumRequest = approvePremiumRequest;
+        window.denyPremiumRequest = denyPremiumRequest;
+        window.approveUserPremium = approveUserPremium;
+        window.viewUserChats = viewUserChats;
     </script>
 </body>
 </html>
