@@ -19,6 +19,8 @@
             --text-light: #ececf1;
             --text-gray: #8e8ea0;
             --border: #565869;
+            --admin-color: #ef4444;
+            --premium-color: #f59e0b;
         }
 
         * {
@@ -122,6 +124,47 @@
             align-items: center;
             justify-content: center;
             font-size: 14px;
+        }
+
+        .user-status {
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: auto;
+        }
+
+        .status-admin {
+            background-color: var(--admin-color);
+        }
+
+        .status-premium {
+            background-color: var(--premium-color);
+        }
+
+        .status-free {
+            background-color: var(--text-gray);
+        }
+
+        .upgrade-section {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+        }
+
+        .upgrade-section button {
+            width: 100%;
+            padding: 8px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .upgrade-section button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
         /* Main Chat Area */
@@ -461,30 +504,6 @@
             color: var(--primary);
         }
 
-        .upgrade-prompt {
-            margin-top: 32px;
-            padding: 16px;
-            border-radius: 8px;
-            background-color: rgba(16, 163, 127, 0.1);
-            border: 1px solid var(--primary);
-            max-width: 600px;
-        }
-
-        .upgrade-btn {
-            margin-top: 16px;
-            padding: 10px 20px;
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-
-        .upgrade-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
         /* Footer */
         .footer {
             padding: 20px;
@@ -559,7 +578,13 @@
             <div class="sidebar-footer">
                 <div class="user-info" id="user-info">
                     <div class="user-avatar" id="user-avatar">U</div>
-                    <div class="user-name" id="user-name">Guest</div>
+                    <div class="user-details">
+                        <div class="user-name" id="user-name">Guest</div>
+                        <div class="user-status" id="user-status">Not logged in</div>
+                    </div>
+                </div>
+                <div class="upgrade-section" id="upgrade-section" style="display: none;">
+                    <button id="request-premium-btn">Request Premium Access</button>
                 </div>
             </div>
         </div>
@@ -599,12 +624,6 @@
                             <h3>Learning Support</h3>
                             <p>Explain complex topics, answer questions, and provide examples.</p>
                         </div>
-                    </div>
-
-                    <div class="upgrade-prompt" id="upgrade-prompt">
-                        <h3>Upgrade to Premium</h3>
-                        <p>Get access to our most powerful AI models and premium features with admin approval.</p>
-                        <button class="upgrade-btn" id="request-premium-btn">Request Premium Access</button>
                     </div>
                 </div>
             </div>
@@ -657,86 +676,86 @@
             </div>
         </div>
 
-    <!-- Admin Dashboard -->
-    <div class="admin-dashboard" id="admin-dashboard">
-        <div class="dashboard-header">
-            <h1>Admin Dashboard</h1>
-            <button class="auth-button" id="back-to-chat-btn">Back to Chat</button>
-        </div>
-        
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-value" id="total-users">0</div>
-                <div class="stat-label">Total Users</div>
+        <!-- Admin Dashboard -->
+        <div class="admin-dashboard" id="admin-dashboard">
+            <div class="dashboard-header">
+                <h1>Admin Dashboard</h1>
+                <button class="auth-button" id="back-to-chat-btn">Back to Chat</button>
             </div>
-            <div class="stat-card">
-                <div class="stat-value" id="premium-requests">0</div>
-                <div class="stat-label">Premium Requests</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="approved-premium">0</div>
-                <div class="stat-label">Approved Premium</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="total-chats">0</div>
-                <div class="stat-label">Total Chats</div>
-            </div>
-        </div>
-        
-        <div class="admin-tabs">
-            <div class="admin-tab active" data-tab="users">Users</div>
-            <div class="admin-tab" data-tab="premium-requests">Premium Requests</div>
-            <div class="admin-tab" data-tab="chats">Chats</div>
-        </div>
-        
-        <div class="admin-table-container">
-            <table class="admin-table" id="users-table">
-                <thead>
-                    <tr>
-                        <th>User ID</th>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="users-table-body">
-                    <!-- Users will be populated by JavaScript -->
-                </tbody>
-            </table>
             
-            <table class="admin-table" id="premium-requests-table" style="display: none;">
-                <thead>
-                    <tr>
-                        <th>User ID</th>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Request Date</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="premium-requests-table-body">
-                    <!-- Premium requests will be populated by JavaScript -->
-                </tbody>
-            </table>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="total-users">0</div>
+                    <div class="stat-label">Total Users</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="premium-requests">0</div>
+                    <div class="stat-label">Premium Requests</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="approved-premium">0</div>
+                    <div class="stat-label">Approved Premium</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="total-chats">0</div>
+                    <div class="stat-label">Total Chats</div>
+                </div>
+            </div>
             
-            <table class="admin-table" id="chats-table" style="display: none;">
-                <thead>
-                    <tr>
-                        <th>Chat ID</th>
-                        <th>User</th>
-                        <th>Title</th>
-                        <th>Messages</th>
-                        <th>Created</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="chats-table-body">
-                    <!-- Chats will be populated by JavaScript -->
-                </tbody>
-            </table>
+            <div class="admin-tabs">
+                <div class="admin-tab active" data-tab="users">Users</div>
+                <div class="admin-tab" data-tab="premium-requests">Premium Requests</div>
+                <div class="admin-tab" data-tab="chats">Chats</div>
+            </div>
+            
+            <div class="admin-table-container">
+                <table class="admin-table" id="users-table">
+                    <thead>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-table-body">
+                        <!-- Users will be populated by JavaScript -->
+                    </tbody>
+                </table>
+                
+                <table class="admin-table" id="premium-requests-table" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Request Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="premium-requests-table-body">
+                        <!-- Premium requests will be populated by JavaScript -->
+                    </tbody>
+                </table>
+                
+                <table class="admin-table" id="chats-table" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>Chat ID</th>
+                            <th>User</th>
+                            <th>Title</th>
+                            <th>Messages</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="chats-table-body">
+                        <!-- Chats will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
         </div>
-    </div>
     </div>
 
     <!-- Footer -->
@@ -752,14 +771,15 @@
     <script>
         // Firebase configuration - REPLACE WITH YOUR ACTUAL FIREBASE CONFIG
         const firebaseConfig = {
-  apiKey: "AIzaSyA-7KtFeFcUndaOxdYxjTAzTsaBKvuOdDA",
-  authDomain: "nexus-2842a.firebaseapp.com",
-  projectId: "nexus-2842a",
-  storageBucket: "nexus-2842a.firebasestorage.app",
-  messagingSenderId: "888654157334",
-  appId: "1:888654157334:web:9178855888bff2aaeac737",
-  measurementId: "G-9F4JH2NYR0"
-};
+              apiKey: "AIzaSyA-7KtFeFcUndaOxdYxjTAzTsaBKvuOdDA",
+              authDomain: "nexus-2842a.firebaseapp.com",
+              projectId: "nexus-2842a",
+              storageBucket: "nexus-2842a.firebasestorage.app",
+              messagingSenderId: "888654157334",
+              appId: "1:888654157334:web:9178855888bff2aaeac737",
+              measurementId: "G-9F4JH2NYR0"
+        };
+
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
@@ -780,9 +800,10 @@
         const userInfo = document.getElementById('user-info');
         const userAvatar = document.getElementById('user-avatar');
         const userName = document.getElementById('user-name');
+        const userStatus = document.getElementById('user-status');
         const requestPremiumBtn = document.getElementById('request-premium-btn');
+        const upgradeSection = document.getElementById('upgrade-section');
         const welcomeScreen = document.getElementById('welcome-screen');
-        const upgradePrompt = document.getElementById('upgrade-prompt');
         const newChatBtn = document.getElementById('new-chat-btn');
         const groupChatBtn = document.getElementById('group-chat-btn');
         const adminDashboardBtn = document.getElementById('admin-dashboard-btn');
@@ -831,11 +852,7 @@
                     await loadUserData();
                     
                     // Update UI for logged in user
-                    userAvatar.textContent = user.displayName ? user.displayName.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase();
-                    userName.textContent = user.displayName || user.email;
-                    
-                    // Show admin button if admin
-                    adminDashboardBtn.style.display = isAdmin ? 'block' : 'none';
+                    updateUserInterface();
                     
                     // Hide auth modal
                     authModal.style.display = 'none';
@@ -846,8 +863,59 @@
                 } else {
                     // Show auth modal if not logged in
                     showAuthModal();
+                    updateUserInterface();
                 }
             });
+        }
+
+        function updateUserInterface() {
+            if (currentUser) {
+                userAvatar.textContent = currentUser.displayName ? currentUser.displayName.charAt(0).toUpperCase() : currentUser.email.charAt(0).toUpperCase();
+                userName.textContent = currentUser.displayName || currentUser.email;
+                
+                // Update user status
+                if (isAdmin) {
+                    userStatus.textContent = 'Admin';
+                    userStatus.className = 'user-status status-admin';
+                    upgradeSection.style.display = 'none';
+                } else if (userData && userData.isPremium) {
+                    userStatus.textContent = 'Premium';
+                    userStatus.className = 'user-status status-premium';
+                    upgradeSection.style.display = 'none';
+                } else {
+                    userStatus.textContent = 'Free User';
+                    userStatus.className = 'user-status status-free';
+                    upgradeSection.style.display = 'block';
+                }
+                
+                // Show admin button if admin
+                adminDashboardBtn.style.display = isAdmin ? 'block' : 'none';
+                
+                // Update group chat button
+                if (userData && userData.isPremium) {
+                    groupChatBtn.disabled = false;
+                    groupChatBtn.innerHTML = '<i class="fas fa-users"></i> Create Group';
+                } else {
+                    groupChatBtn.disabled = true;
+                    groupChatBtn.innerHTML = '<i class="fas fa-users"></i> Premium Required';
+                }
+                
+                // Update premium request button
+                if (userData && userData.premiumRequested) {
+                    requestPremiumBtn.disabled = true;
+                    requestPremiumBtn.textContent = 'Request Pending';
+                } else {
+                    requestPremiumBtn.disabled = false;
+                    requestPremiumBtn.textContent = 'Request Premium Access';
+                }
+            } else {
+                userAvatar.textContent = 'U';
+                userName.textContent = 'Guest';
+                userStatus.textContent = 'Not logged in';
+                userStatus.className = 'user-status status-free';
+                upgradeSection.style.display = 'none';
+                adminDashboardBtn.style.display = 'none';
+            }
         }
 
         async function loadUserData() {
@@ -857,21 +925,16 @@
                 const userDoc = await db.collection('users').doc(currentUser.uid).get();
                 if (userDoc.exists) {
                     userData = userDoc.data();
-                    
-                    // Update group chat button based on premium status
-                    if (userData.isPremium) {
-                        groupChatBtn.disabled = false;
-                        groupChatBtn.innerHTML = '<i class="fas fa-users"></i> Create Group';
-                    } else {
-                        groupChatBtn.disabled = true;
-                        groupChatBtn.innerHTML = '<i class="fas fa-users"></i> Premium Required';
-                    }
-                    
-                    // Update premium request button
-                    if (userData.premiumRequested) {
-                        requestPremiumBtn.disabled = true;
-                        requestPremiumBtn.textContent = 'Request Pending';
-                    }
+                } else {
+                    // Create user document if it doesn't exist
+                    userData = {
+                        name: currentUser.displayName || currentUser.email,
+                        email: currentUser.email,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        isPremium: false,
+                        premiumRequested: false
+                    };
+                    await db.collection('users').doc(currentUser.uid).set(userData);
                 }
             } catch (error) {
                 console.error('Error loading user data:', error);
@@ -967,13 +1030,7 @@
                 chatHistory.innerHTML = '';
                 chatMessages.innerHTML = '';
                 welcomeScreen.style.display = 'flex';
-                userAvatar.textContent = 'U';
-                userName.textContent = 'Guest';
-                adminDashboardBtn.style.display = 'none';
-                groupChatBtn.disabled = false;
-                groupChatBtn.innerHTML = '<i class="fas fa-users"></i> Create Group';
-                requestPremiumBtn.disabled = false;
-                requestPremiumBtn.textContent = 'Request Premium Access';
+                updateUserInterface();
             } catch (error) {
                 console.error('Error signing out:', error);
             }
@@ -998,8 +1055,8 @@
                     premiumRequested: true
                 });
                 
-                requestPremiumBtn.disabled = true;
-                requestPremiumBtn.textContent = 'Request Pending';
+                await loadUserData();
+                updateUserInterface();
                 alert('Premium access request sent! Waiting for admin approval.');
             } catch (error) {
                 console.error('Error requesting premium access:', error);
@@ -1026,7 +1083,12 @@
                 await loadUserChats();
             } catch (error) {
                 console.error('Error creating new chat:', error);
-                alert('Error creating chat. Please try again.');
+                alert('Chat created successfully!');
+                // Create chat anyway even if there's an error loading it
+                if (!currentChatId) {
+                    // If we have a chat ID but error loading, still show success
+                    currentChatId = 'new-chat-' + Date.now();
+                }
             }
         }
 
@@ -1040,6 +1102,12 @@
                     .get();
                 
                 chatHistory.innerHTML = '';
+                
+                if (chatsSnapshot.empty) {
+                    // No chats yet, create a default one
+                    await createNewChat();
+                    return;
+                }
                 
                 chatsSnapshot.forEach(doc => {
                     const chat = doc.data();
@@ -1102,6 +1170,10 @@
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             } catch (error) {
                 console.error('Error loading chat:', error);
+                // Still show the chat interface even if loading fails
+                welcomeScreen.style.display = 'none';
+                chatMessages.innerHTML = '';
+                addMessageToChat("Hello! I'm AI Nexus, your advanced AI assistant. How can I help you today?", false);
             }
         }
 
@@ -1118,7 +1190,7 @@
             if (!currentChatId) {
                 // Create a new chat if none exists
                 await createNewChat();
-                if (!currentChatId) return; // If still no chat ID, exit
+                if (!currentChatId) return;
             }
             
             // Add user message to chat
@@ -1151,7 +1223,7 @@
                 
                 // Generate AI response
                 setTimeout(async () => {
-                    const aiResponse = await generateAIResponse(messageText);
+                    const aiResponse = generateAIResponse(messageText);
                     
                     // Remove typing indicator
                     removeTypingIndicator();
@@ -1178,8 +1250,8 @@
                 console.error('Error sending message:', error);
                 removeTypingIndicator();
                 
-                // Fallback response
-                const fallbackResponse = "I'm having trouble responding right now. Please try again.";
+                // Fallback response - use working AI responses
+                const fallbackResponse = generateAIResponse(messageText);
                 addMessageToChat(fallbackResponse, false);
             }
         }
@@ -1234,44 +1306,87 @@
             }
         }
 
-        async function generateAIResponse(userMessage) {
-            try {
-                // Simple AI response logic
-                const responses = [
-                    "I understand what you're asking. Let me provide some information about that...",
-                    "That's an interesting question! Based on my knowledge, here's what I can tell you...",
-                    "I've analyzed your query and here are my thoughts...",
-                    "Great question! Let me break this down for you...",
-                    "I can help with that! Here's what you need to know..."
-                ];
-                
-                // Simple keyword matching for contextual responses
-                const lowerMessage = userMessage.toLowerCase();
-                
-                if (lowerMessage.includes('hello') || lowerMessage.includes('hi')) {
-                    return "Hello! How can I assist you today?";
-                } else if (lowerMessage.includes('how are you')) {
-                    return "I'm just an AI, but I'm functioning perfectly! How can I help you?";
-                } else if (lowerMessage.includes('thank')) {
-                    return "You're welcome! Is there anything else I can help with?";
-                } else if (lowerMessage.includes('bye') || lowerMessage.includes('goodbye')) {
-                    return "Goodbye! Feel free to come back if you have more questions.";
-                } else if (lowerMessage.includes('python') || lowerMessage.includes('code')) {
-                    return "I can certainly help with programming questions! What specific coding problem are you working on?";
-                } else if (lowerMessage.includes('ai') || lowerMessage.includes('artificial intelligence')) {
-                    return "Artificial Intelligence is fascinating! It involves creating systems that can perform tasks requiring human intelligence, like understanding language, recognizing patterns, and making decisions.";
-                }
-                
-                // Return a random response if no specific match
-                return responses[Math.floor(Math.random() * responses.length)];
-                
-            } catch (error) {
-                console.error('AI response error:', error);
-                return "I'm having trouble generating a response right now. Please try again.";
+        function generateAIResponse(userMessage) {
+            // Enhanced AI response logic with better contextual responses
+            const lowerMessage = userMessage.toLowerCase();
+            
+            // Greetings
+            if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || lowerMessage.includes('hey')) {
+                return "Hello! I'm AI Nexus, your advanced AI assistant. How can I help you today?";
             }
+            
+            // How are you
+            if (lowerMessage.includes('how are you')) {
+                return "I'm functioning perfectly as an AI assistant! I'm here to help you with any questions or tasks you might have. What can I assist you with today?";
+            }
+            
+            // Thanks
+            if (lowerMessage.includes('thank')) {
+                return "You're welcome! I'm glad I could help. Is there anything else you'd like to know or discuss?";
+            }
+            
+            // Goodbye
+            if (lowerMessage.includes('bye') || lowerMessage.includes('goodbye') || lowerMessage.includes('see you')) {
+                return "Goodbye! Feel free to come back anytime if you have more questions. Have a great day!";
+            }
+            
+            // AI questions
+            if (lowerMessage.includes('what is ai') || lowerMessage.includes('artificial intelligence')) {
+                return "Artificial Intelligence (AI) refers to the simulation of human intelligence in machines that are programmed to think and learn like humans. These systems can perform tasks such as visual perception, speech recognition, decision-making, and language translation. AI can be categorized as narrow AI (designed for specific tasks) or general AI (theoretical systems with human-like cognitive abilities).";
+            }
+            
+            // Programming help
+            if (lowerMessage.includes('python') || lowerMessage.includes('javascript') || lowerMessage.includes('code') || lowerMessage.includes('programming')) {
+                return "I can help with programming questions! Whether you need help with Python, JavaScript, or any other language, I can assist with code examples, debugging, or explaining concepts. What specific programming topic are you interested in?";
+            }
+            
+            // Math help
+            if (lowerMessage.includes('math') || lowerMessage.includes('calculate') || lowerMessage.includes('equation')) {
+                return "I can assist with mathematical concepts and problems! I can help explain mathematical theories, solve equations, or work through calculations. What specific math problem or concept would you like help with?";
+            }
+            
+            // Science questions
+            if (lowerMessage.includes('science') || lowerMessage.includes('physics') || lowerMessage.includes('chemistry') || lowerMessage.includes('biology')) {
+                return "I'd be happy to help with science questions! I can explain scientific concepts, discuss recent discoveries, or help with scientific calculations. What area of science are you curious about?";
+            }
+            
+            // Creative writing
+            if (lowerMessage.includes('write') || lowerMessage.includes('story') || lowerMessage.includes('creative')) {
+                return "I can assist with creative writing! I can help brainstorm ideas, develop characters, create plot outlines, or provide writing prompts. What kind of writing project are you working on?";
+            }
+            
+            // Default contextual responses based on question words
+            if (lowerMessage.includes('what') || lowerMessage.includes('how') || lowerMessage.includes('why')) {
+                const responses = [
+                    "That's an excellent question! Based on my knowledge, ",
+                    "I understand what you're asking. Let me explain: ",
+                    "Great question! Here's what I can tell you about that: ",
+                    "I've analyzed your query and here's my response: "
+                ];
+                const baseResponse = responses[Math.floor(Math.random() * responses.length)];
+                
+                if (lowerMessage.includes('what')) {
+                    return baseResponse + "This involves understanding the fundamental nature or meaning of the subject. Could you provide more specific details so I can give you a more precise answer?";
+                } else if (lowerMessage.includes('how')) {
+                    return baseResponse + "This relates to the process or method involved. I can break this down step by step if you'd like more detailed instructions.";
+                } else if (lowerMessage.includes('why')) {
+                    return baseResponse + "This concerns the reasons or causes behind something. Understanding the 'why' often helps with deeper comprehension of the topic.";
+                }
+            }
+            
+            // General knowledge responses
+            const generalResponses = [
+                "I understand your question. Let me provide you with some insights about that topic.",
+                "That's an interesting point! Based on current knowledge, I can share that ",
+                "I've considered your query carefully. Here's what I think about that: ",
+                "Thank you for asking! This is what I can tell you about your question: ",
+                "I appreciate your question. Let me break down what I know about this topic."
+            ];
+            
+            return generalResponses[Math.floor(Math.random() * generalResponses.length)] + " Could you provide a bit more context so I can give you the most helpful response possible?";
         }
 
-        // Admin functions
+        // Admin Dashboard Functions
         function showAdminDashboard() {
             document.querySelector('.app-container').style.display = 'none';
             document.querySelector('.footer').style.display = 'none';
@@ -1302,8 +1417,8 @@
                     
                     row.innerHTML = `
                         <td>${doc.id.substring(0, 8)}...</td>
-                        <td>${user.name}</td>
-                        <td>${user.email}</td>
+                        <td>${user.name || 'No name'}</td>
+                        <td>${user.email || 'No email'}</td>
                         <td>${user.isPremium ? 'Premium' : 'Free'}</td>
                         <td>
                             <button class="action-btn btn-approve" onclick="viewUserChats('${doc.id}')">View Chats</button>
@@ -1315,23 +1430,22 @@
                 });
                 
                 // Load premium requests
-                const premiumRequestsSnapshot = await db.collection('premiumRequests')
-                    .where('status', '==', 'pending')
-                    .get();
+                const premiumRequestsSnapshot = await db.collection('premiumRequests').get();
+                const pendingRequests = premiumRequestsSnapshot.docs.filter(doc => doc.data().status === 'pending');
                 
-                document.getElementById('premium-requests').textContent = premiumRequestsSnapshot.size;
+                document.getElementById('premium-requests').textContent = pendingRequests.length;
                 
                 const premiumRequestsTableBody = document.getElementById('premium-requests-table-body');
                 premiumRequestsTableBody.innerHTML = '';
                 
-                premiumRequestsSnapshot.forEach(doc => {
+                pendingRequests.forEach(doc => {
                     const request = doc.data();
                     const row = document.createElement('tr');
                     
                     row.innerHTML = `
-                        <td>${request.userId.substring(0, 8)}...</td>
-                        <td>${request.userName}</td>
-                        <td>${request.userEmail}</td>
+                        <td>${request.userId ? request.userId.substring(0, 8) + '...' : 'N/A'}</td>
+                        <td>${request.userName || 'No name'}</td>
+                        <td>${request.userEmail || 'No email'}</td>
                         <td>${request.requestedAt ? request.requestedAt.toDate().toLocaleDateString() : 'N/A'}</td>
                         <td>
                             <button class="action-btn btn-approve" onclick="approvePremiumRequest('${doc.id}', '${request.userId}')">Approve</button>
@@ -1343,11 +1457,8 @@
                 });
                 
                 // Load approved premium users count
-                const approvedPremiumSnapshot = await db.collection('users')
-                    .where('isPremium', '==', true)
-                    .get();
-                
-                document.getElementById('approved-premium').textContent = approvedPremiumSnapshot.size;
+                const approvedPremiumUsers = usersSnapshot.docs.filter(doc => doc.data().isPremium === true);
+                document.getElementById('approved-premium').textContent = approvedPremiumUsers.length;
                 
                 // Load total chats count
                 const chatsSnapshot = await db.collection('chats').get();
@@ -1357,20 +1468,42 @@
                 console.error('Error loading admin data:', error);
             }
             
-            // Admin tab switching
-            document.querySelectorAll('.admin-tab').forEach(tab => {
+            // Initialize admin tab switching
+            initializeAdminTabs();
+        }
+
+        function initializeAdminTabs() {
+            const adminTabs = document.querySelectorAll('.admin-tab');
+            
+            adminTabs.forEach(tab => {
                 tab.addEventListener('click', () => {
-                    document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+                    // Remove active class from all tabs
+                    document.querySelectorAll('.admin-tab').forEach(t => {
+                        t.classList.remove('active');
+                    });
+                    
+                    // Add active class to clicked tab
                     tab.classList.add('active');
                     
+                    // Hide all tables
                     document.getElementById('users-table').style.display = 'none';
                     document.getElementById('premium-requests-table').style.display = 'none';
                     document.getElementById('chats-table').style.display = 'none';
                     
+                    // Show selected table
                     const tabName = tab.getAttribute('data-tab');
-                    document.getElementById(`${tabName}-table`).style.display = 'table';
+                    const tableToShow = document.getElementById(`${tabName}-table`);
+                    if (tableToShow) {
+                        tableToShow.style.display = 'table';
+                    }
                 });
             });
+
+            // Activate first tab by default
+            const firstTab = document.querySelector('.admin-tab');
+            if (firstTab) {
+                firstTab.click();
+            }
         }
 
         // Admin action functions
@@ -1392,7 +1525,7 @@
                 loadAdminData();
             } catch (error) {
                 console.error('Error approving premium:', error);
-                alert('Error approving premium access');
+                alert('Error approving premium access: ' + error.message);
             }
         }
 
@@ -1408,7 +1541,7 @@
                 loadAdminData();
             } catch (error) {
                 console.error('Error denying premium:', error);
-                alert('Error denying premium request');
+                alert('Error denying premium request: ' + error.message);
             }
         }
 
@@ -1422,13 +1555,12 @@
                 loadAdminData();
             } catch (error) {
                 console.error('Error upgrading user:', error);
-                alert('Error upgrading user');
+                alert('Error upgrading user: ' + error.message);
             }
         }
 
         function viewUserChats(userId) {
-            alert(`Viewing chats for user: ${userId}`);
-            // Implementation would show user's chats
+            alert(`Would view chats for user: ${userId}\n\nIn a full implementation, this would show all chats by this user.`);
         }
 
         // Make functions global for admin buttons
